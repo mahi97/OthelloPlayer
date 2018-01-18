@@ -22,25 +22,113 @@ public class ParsianPlayer extends AbstractPlayer {
         return null;
     }
 
+    
+/**************** SEARCH *****************/
     public int[][] BNS(int[][] node, double alpha, double beta) {
         OthelloGame othelloGame = new OthelloGame();
         List<Move> moveList = othelloGame.getValidMoves(node, getMyBoardMark());
         int betterCounter = 0;
-//        not((β - α < 2) or (betterCount = 1))
-//        test := NextGuess(α, β, subtreeCount)
-//        betterCount := 0
-//        foreach child of node
-//        bestVal := -AlphaBeta(child, -test, -(test - 1))
-//        if bestVal ≥ test
-//        betterCount := betterCount + 1
-//        bestNode := child
-//        //update number of sub-trees that exceeds separation test value
-//        //update alpha-beta range
-        while (!((beta - alpha < 2) || betterCounter == 1)) {
+        Move bestNode = null;
+        do {
+            double test = 0.0; // next Guess
+            betterCounter = 0;
+            for(Move m : moveList) {
+                double bestVal = -alphaBetaWithMemory(node, -test, -test + 1, getDepth(), true);
+                if (bestVal >= test) {
+                    betterCounter += 1;
+                    bestNode = m;
+                }
 
-        }
-        return null;
+            }
+            //        //update number of sub-trees that exceeds separation test value
+            //        //update alpha-beta range
+        } while (!((beta - alpha < 2) || betterCounter == 1));
+        assert bestNode != null;
+        return bestNode.getBoard();
     }
+
+    public double MTDF(int[][] root, double firstGuess, int depth) {
+        double goal = firstGuess;
+        double upperBound = Double.MAX_VALUE;
+        double lowerBound = Double.MIN_VALUE;
+        while (lowerBound < upperBound) {
+            double beta = Math.max(goal, lowerBound + 1);
+            goal = alphaBeta(root, beta - 1, beta, depth, true);
+            if (goal < beta) {
+                upperBound = goal;
+            } else {
+                lowerBound = goal;
+            }
+        }
+        return goal;
+    }
+
+    public double alphaBeta(int[][] root, double alpha, double beta, int depth, boolean withMemory){
+        if (withMemory) {
+            return alphaBetaWithMemory(root, alpha, beta, depth, true);
+        } else {
+            return alphaBetaCore(root, alpha, beta, depth, true);
+        }
+    }
+
+    public double alphaBetaWithMemory(int[][] root, double alpha, double beta, int depth, boolean maxPlayer) {
+        OthelloGame othelloGame = new OthelloGame();
+        double v;
+        if (depth == 0 || endGame(root)) {
+            Double d = transportTable.get(new Entity(root));
+            if (d == null) return eval(root);
+            return d;
+        }
+        if (maxPlayer) {
+            v = Double.MIN_VALUE;
+            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
+                v = Math.max(v, alphaBetaWithMemory(m.getBoard(), alpha, beta, depth - 1, false));
+                alpha = Math.max(alpha, v);
+                if (beta <= alpha) break;
+            }
+        } else {
+            v = Double.MAX_VALUE;
+            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
+                v = Math.min(v, alphaBetaWithMemory(m.getBoard(), alpha, beta, depth - 1, true));
+                beta = Math.min(beta, v);
+                if (beta <= alpha) break;
+            }
+        }
+        return v;
+    }
+
+    private double alphaBetaCore(int[][] root, double alpha, double beta, int depth, boolean maxPlayer) {
+        OthelloGame othelloGame = new OthelloGame();
+        double v = 0.0;
+        if (depth == 0 || endGame(root)) {
+            return eval(root);
+        }
+        if (maxPlayer) {
+            v = Double.MIN_VALUE;
+            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
+                v = Math.max(v, alphaBetaCore(m.getBoard(), alpha, beta, depth - 1, false));
+                alpha = Math.max(alpha, v);
+                if (beta <= alpha) break;
+            }
+        } else {
+            v = Double.MAX_VALUE;
+            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
+                v = Math.min(v, alphaBetaCore(m.getBoard(), alpha, beta, depth - 1, true));
+                beta = Math.min(beta, v);
+                if (beta <= alpha) break;
+            }
+        }
+        return v;
+    }
+
+    private boolean endGame(int[][] tab) {
+        OthelloGame othelloGame = new OthelloGame();
+        return othelloGame.noSpace(tab)
+                || (othelloGame.getValidMoves(tab, getMyBoardMark()).size() == 0
+                && othelloGame.getValidMoves(tab, getOpponentBoardMark()).size() == 0);
+    }
+/**************** END SEARCH *****************/
+/**************** EVALUATION *****************/
 
     private double eval(int[][] node) {
         double diff = pieceDiff(node);
@@ -304,5 +392,21 @@ public class ParsianPlayer extends AbstractPlayer {
         }
 
         return result;
+    }
+
+    /**************** END EVALUATION *****************/
+
+}
+
+
+class Entity {
+    Entity(int[][] _node){
+        key = _node;
+    }
+    private int[][] key;
+
+    @Override
+    public int hashCode() { // TODO : Change it to zorbist
+        return super.hashCode();
     }
 }
