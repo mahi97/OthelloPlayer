@@ -4,21 +4,27 @@ import game.AbstractPlayer;
 import game.BoardSquare;
 import game.Move;
 import game.OthelloGame;
-import javafx.util.Pair;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
 public class ParsianPlayer extends AbstractPlayer {
 
+    private HashMap<Entity, Double> transportTable;
+
     public ParsianPlayer(int depth) {
         super(depth);
+        best = null;
     }
 
+    public Move best;
     @Override
     public BoardSquare play(int[][] tab) {
-        int[][] a = BNS(tab, 0, 1);
+        best = null;
+        double f = MTDF(tab, 0, 10);
+
         return null;
     }
 
