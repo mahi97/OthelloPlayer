@@ -47,13 +47,14 @@ public class ParsianPlayer extends AbstractPlayer {
         best = null;
         double f;
 
-        if (killerCondition(false, tab)) return killerMove.getBardPlace();
+        if (killerCondition(false, tab) && getMyBoardMark() == 1) return killerMove.getBardPlace();
 
         System.out.println("Branch: " + jogo.getValidMoves(tab, getMyBoardMark()).size());
         System.out.println("Branch: " + jogo.getValidMoves(tab, getOpponentBoardMark()).size());
 
-        if (getMyBoardMark() == 1 || true) f = alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
-//        else
+        if (getMyBoardMark() == 1) f = alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
+        else f = alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
+
 //            f = BNS(new Entity(tab), -Double.MAX_VALUE + 1, Double.MAX_VALUE);
         System.out.println("Point : " + f);
         if (best == null) {
@@ -279,6 +280,10 @@ public class ParsianPlayer extends AbstractPlayer {
 
     private double eval(int[][] node, boolean end) {
         double diff = pieceDiff(node);
+        if (end) return diff*10
+//                + cor_occ * 801.724
+//                + cor_close * 382.026
+        ;
         double cor_occ = cornerOccupancy(node);
         double cor_close = cornerCloseness(node);
         double mob = mobility(node);
@@ -530,6 +535,40 @@ public class ParsianPlayer extends AbstractPlayer {
     }
 
 
+    private double stablity(int[][] tab) {
+        boolean[][] newList = new boolean[8][8];
+        boolean[][] newListR = new boolean[8][8];
+        boolean[][] oldList = new boolean[8][8];
+        boolean[][] oldListR = new boolean[8][8];
+
+        do {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    if (tab[i][j] == getMyBoardMark()) {
+                        if (i == 0 && j == 0) newList[i][j] = true;
+                        if (i == 0 && j == 7) newList[i][j] = true;
+                        if (i == 7 && j == 7) newList[i][j] = true;
+                        if (i == 7 && j == 0) newList[i][j] = true;
+
+//                        if (leftS(i,j))
+
+                    } else if (tab[i][j] == getOpponentBoardMark()){
+                        if (i == 0 && j == 0) newListR[i][j] = true;
+                        if (i == 0 && j == 7) newListR[i][j] = true;
+                        if (i == 7 && j == 7) newListR[i][j] = true;
+                        if (i == 7 && j == 0) newListR[i][j] = true;
+
+                    }
+
+
+                }
+            }
+        }while (false);
+        return 0.0;
+    }
+
+
+
 
     /**************** END EVALUATION *****************/
 
@@ -589,5 +628,10 @@ class Entity {
     @Override
     public int hashCode() { // TODO : Change it to zorbist
         return zobristHash(key);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }
