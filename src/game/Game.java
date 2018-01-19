@@ -38,13 +38,13 @@ public class Game {
             case 0:
                 game = new OthelloGame();
                 //Define player 1 class
-                player = new players.ParsianPlayer(8);
+                player = new players.ParsianPlayer(4);
                 player.setBoardMark(X);
                 player.setOpponentBoardMark(O);
                 player.setGame(game);
 
                 //Define player 2 class
-                player2 = new players.ParsianPlayer(8);
+                player2 = new players.ParsianPlayer(4);
 //                if (displayOtello != null) {
 //                    player2 = new players.HumanPlayerDisplay(2);
 //                } else {
