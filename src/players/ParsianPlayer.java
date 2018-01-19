@@ -24,25 +24,24 @@ public class ParsianPlayer extends AbstractPlayer {
     private HashMap<Entity, Double> transportTable;
     private GameStage gameStage;
 
+    private int playCounter;
+    private Move best;
+
     public ParsianPlayer(int depth) {
         super(depth);
         best = null;
         transportTable = new HashMap<>();
         gameStage = GameStage.NO_STAGE;
+
+        playCounter = 0;
     }
 
-
-    public Move best;
     @Override
     public BoardSquare play(int[][] tab) {
         OthelloGame jogo = new OthelloGame();
-//        Random r = new Random();
-//        List<Move> jogadas = jogo.getValidMoves(tab, getMyBoardMark());
-//        if (jogadas.size() > 0) {
-//            return jogadas.get(r.nextInt(jogadas.size())).getBardPlace();
-//        } else {
-//            return new BoardSquare(-1, -1);
-//        }
+        playCounter++;
+        evalGameState();
+        System.out.println("Game Stage : " + gameStage.name());
         best = null;
         double f;
         System.out.println("Branch: " + jogo.getValidMoves(tab, getMyBoardMark()).size());
@@ -51,7 +50,7 @@ public class ParsianPlayer extends AbstractPlayer {
         if (getMyBoardMark() == 1 || true) f = alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
 //        else
 //            f = BNS(new Entity(tab), -Double.MAX_VALUE + 1, Double.MAX_VALUE);
-        System.out.println("F : " + f);
+        System.out.println("Point : " + f);
         if (best == null) {
             System.out.println("MISSED" + jogo.getValidMoves(tab, getMyBoardMark()) + "  " + getMyBoardMark());
             return new BoardSquare(-1,-1);
@@ -62,6 +61,17 @@ public class ParsianPlayer extends AbstractPlayer {
     }
 
     public void evalGameState() {
+        if (playCounter < 5) {
+            gameStage = GameStage.OPENING;
+        } else if (playCounter < 10) {
+            gameStage = GameStage.EARLY;
+        } else if (playCounter < 22.5) {
+            gameStage = GameStage.MID;
+        } else if (playCounter < 10) {
+            gameStage = GameStage.PRE_END;
+        } else {
+            gameStage = GameStage.END;
+        }
 
     }
 
@@ -76,6 +86,7 @@ public class ParsianPlayer extends AbstractPlayer {
             double test = 0.0; // next Guess
             betterCounter = 0;
             for(Move m : moveList) {
+
                 bestVal = -alphaBetaWithMemory(node, -test, -test + 1, getDepth(), true);
                 if (bestVal >= test) {
                     betterCounter += 1;
@@ -85,6 +96,7 @@ public class ParsianPlayer extends AbstractPlayer {
             }
             //        //update number of sub-trees that exceeds separation test value
             //        //update alpha-beta range
+
             if (bestVal > alpha) {
                 alpha = bestVal;
             }
@@ -185,8 +197,7 @@ public class ParsianPlayer extends AbstractPlayer {
         if (maxPlayer) {
             v = -Double.MAX_VALUE + 1;
             for (Move m : othelloGame.getValidMoves(root.getKey(), getMyBoardMark())) {
-                if (depth == getDepth() && getMyBoardMark() == 1)
-                    System.out.println("a");
+
                 Entity e = new Entity(m.getBoard());
                 e.setMove(m);
                 alpha = Math.max(alpha, alphaBetaCore(e, alpha, beta, depth - 1, false));
