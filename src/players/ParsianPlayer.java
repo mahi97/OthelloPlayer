@@ -4,36 +4,81 @@ import game.AbstractPlayer;
 import game.BoardSquare;
 import game.Move;
 import game.OthelloGame;
-import javafx.util.Pair;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
+enum GameStage {
+    NO_STAGE,
+    OPENING,
+    EARLY,
+    MID,
+    PRE_END,
+    END
+}
+
 public class ParsianPlayer extends AbstractPlayer {
+
+    private HashMap<Entity, Double> transportTable;
+    private GameStage gameStage;
 
     public ParsianPlayer(int depth) {
         super(depth);
+        best = null;
+        transportTable = new HashMap<>();
+        gameStage = GameStage.NO_STAGE;
     }
 
+
+    public Move best;
     @Override
     public BoardSquare play(int[][] tab) {
-        int[][] a = BNS(tab, 0, 1);
-        return null;
+        OthelloGame jogo = new OthelloGame();
+//        Random r = new Random();
+//        List<Move> jogadas = jogo.getValidMoves(tab, getMyBoardMark());
+//        if (jogadas.size() > 0) {
+//            return jogadas.get(r.nextInt(jogadas.size())).getBardPlace();
+//        } else {
+//            return new BoardSquare(-1, -1);
+//        }
+        best = null;
+        double f;
+        System.out.println("Branch: " + jogo.getValidMoves(tab, getMyBoardMark()).size());
+        System.out.println("Branch: " + jogo.getValidMoves(tab, getOpponentBoardMark()).size());
+
+        if (getMyBoardMark() == 1 || true) f = alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
+//        else
+//            f = BNS(new Entity(tab), -Double.MAX_VALUE + 1, Double.MAX_VALUE);
+        System.out.println("F : " + f);
+        if (best == null) {
+            System.out.println("MISSED" + jogo.getValidMoves(tab, getMyBoardMark()) + "  " + getMyBoardMark());
+            return new BoardSquare(-1,-1);
+        }
+        System.out.println(best.getBardPlace().toString());
+        return best.getBardPlace();
+
     }
 
-    
+
+    public void evalGameState() {
+
+    }
+
 /**************** SEARCH *****************/
-    public int[][] BNS(int[][] node, double alpha, double beta) {
+    public double BNS(Entity node, double alpha, double beta) {
         OthelloGame othelloGame = new OthelloGame();
-        List<Move> moveList = othelloGame.getValidMoves(node, getMyBoardMark());
+        List<Move> moveList = othelloGame.getValidMoves(node.getKey(), getMyBoardMark());
         int betterCounter = 0;
         Move bestNode = null;
+        double bestVal = 0;
         do {
             double test = 0.0; // next Guess
             betterCounter = 0;
             for(Move m : moveList) {
-                double bestVal = -alphaBetaWithMemory(node, -test, -test + 1, getDepth(), true);
+
+                bestVal = -alphaBetaWithMemory(node, -test, -test + 1, getDepth(), true);
                 if (bestVal >= test) {
                     betterCounter += 1;
                     bestNode = m;
@@ -42,18 +87,26 @@ public class ParsianPlayer extends AbstractPlayer {
             }
             //        //update number of sub-trees that exceeds separation test value
             //        //update alpha-beta range
+
+            if (bestVal > alpha) {
+                alpha = bestVal;
+            }
+            if (bestVal < beta) {
+                beta = bestVal;
+            }
         } while (!((beta - alpha < 2) || betterCounter == 1));
         assert bestNode != null;
-        return bestNode.getBoard();
+        return bestVal;
     }
 
-    public double MTDF(int[][] root, double firstGuess, int depth) {
+    public double MTDF(Entity root, double firstGuess, int depth) {
         double goal = firstGuess;
         double upperBound = Double.MAX_VALUE;
-        double lowerBound = Double.MIN_VALUE;
+        double lowerBound = -Double.MAX_VALUE + 1;
         while (lowerBound < upperBound) {
             double beta = Math.max(goal, lowerBound + 1);
             goal = alphaBeta(root, beta - 1, beta, depth, true);
+            System.out.println("Goal " + goal);
             if (goal < beta) {
                 upperBound = goal;
             } else {
@@ -63,74 +116,126 @@ public class ParsianPlayer extends AbstractPlayer {
         return goal;
     }
 
-    public double alphaBeta(int[][] root, double alpha, double beta, int depth, boolean withMemory){
+
+    public double alphaBeta(Entity root, double alpha, double beta, int depth, boolean withMemory){
         if (withMemory) {
-            return alphaBetaWithMemory(root, alpha, beta, depth, true);
+            return alphaBetaWithMemory(root, -Double.MAX_VALUE + 1, Double.MAX_VALUE, depth, true);
         } else {
-            return alphaBetaCore(root, alpha, beta, depth, true);
+            return alphaBetaCore(root, -Double.MAX_VALUE + 1, Double.MAX_VALUE, depth, true);
         }
     }
 
-    public double alphaBetaWithMemory(int[][] root, double alpha, double beta, int depth, boolean maxPlayer) {
+    public double alphaBetaWithMemory(Entity root, double alpha, double beta, int depth, boolean maxPlayer) {
         OthelloGame othelloGame = new OthelloGame();
         double v;
-        if (depth == 0 || endGame(root)) {
-            Double d = transportTable.get(new Entity(root));
-            if (d == null) return eval(root);
-            return d;
+        if (depth == 0) {
+            double d;
+            if (transportTable.containsKey(root)) {
+                d = transportTable.get(root);
+                return d;
+            } else {
+                double e = eval(root.getKey(), false);
+                transportTable.put(root, e);
+                return e;
+            }
+        }
+        if (endGame(root.getKey(), maxPlayer)) {
+            double e = eval(root.getKey(), true);
+            return e;
         }
         if (maxPlayer) {
-            v = Double.MIN_VALUE;
-            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
-                v = Math.max(v, alphaBetaWithMemory(m.getBoard(), alpha, beta, depth - 1, false));
-                alpha = Math.max(alpha, v);
-                if (beta <= alpha) break;
+            v = -Double.MAX_VALUE + 1;
+            for (Move m : othelloGame.getValidMoves(root.getKey(), getMyBoardMark())) {
+                Entity e = new Entity(m.getBoard());
+                e.setMove(m);
+                alpha = Math.max(alpha, alphaBetaWithMemory(new Entity(m.getBoard()), alpha, beta, depth - 1, false));
+                if (alpha > v) {
+                    v = alpha;
+                    if (depth == getDepth()) best = m;
+                }
+                if (beta <= alpha) {
+                    break;
+                }
             }
         } else {
             v = Double.MAX_VALUE;
-            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
-                v = Math.min(v, alphaBetaWithMemory(m.getBoard(), alpha, beta, depth - 1, true));
-                beta = Math.min(beta, v);
-                if (beta <= alpha) break;
+            for (Move m : othelloGame.getValidMoves(root.getKey(), getOpponentBoardMark())) {
+                Entity e = new Entity(m.getBoard());
+                e.setMove(m);
+                beta = Math.min(beta, alphaBetaWithMemory(e, alpha, beta, depth - 1, true));
+                if (beta < v) {
+                    v = beta;
+                }
+                if (beta <= alpha) {
+                    break;
+                }
             }
         }
+
         return v;
     }
 
-    private double alphaBetaCore(int[][] root, double alpha, double beta, int depth, boolean maxPlayer) {
+    private double alphaBetaCore(Entity root, double alpha, double beta, int depth, boolean maxPlayer) {
         OthelloGame othelloGame = new OthelloGame();
-        double v = 0.0;
-        if (depth == 0 || endGame(root)) {
-            return eval(root);
+        double v;
+        if (depth == 0) {
+            double a = eval(root.getKey(), false);
+            return a;
+        }
+        if (endGame(root.getKey(), maxPlayer)) {
+            double a = eval(root.getKey(), true);
+            return a;
         }
         if (maxPlayer) {
-            v = Double.MIN_VALUE;
-            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
-                v = Math.max(v, alphaBetaCore(m.getBoard(), alpha, beta, depth - 1, false));
-                alpha = Math.max(alpha, v);
-                if (beta <= alpha) break;
+            v = -Double.MAX_VALUE + 1;
+            for (Move m : othelloGame.getValidMoves(root.getKey(), getMyBoardMark())) {
+                if (depth == getDepth() && getMyBoardMark() == 1)
+                    System.out.println("a");
+                Entity e = new Entity(m.getBoard());
+                e.setMove(m);
+                alpha = Math.max(alpha, alphaBetaCore(e, alpha, beta, depth - 1, false));
+                if (alpha > v) {
+                    v = alpha;
+                    if (depth == getDepth()) best = m;
+                }
+                if (beta <= alpha) {
+                    break;
+                }
             }
         } else {
             v = Double.MAX_VALUE;
-            for (Move m : othelloGame.getValidMoves(root, getMyBoardMark())) {
-                v = Math.min(v, alphaBetaCore(m.getBoard(), alpha, beta, depth - 1, true));
-                beta = Math.min(beta, v);
-                if (beta <= alpha) break;
+            for (Move m : othelloGame.getValidMoves(root.getKey(), getOpponentBoardMark())) {
+                Entity e = new Entity(m.getBoard());
+                e.setMove(m);
+                beta = Math.min(beta, alphaBetaCore(e, alpha, beta, depth - 1, true));
+                if (beta < v) {
+                    v = beta;
+                }
+                if (beta <= alpha) {
+                    break;
+                }
             }
         }
+
         return v;
     }
 
-    private boolean endGame(int[][] tab) {
+    private boolean endGame(int[][] tab, boolean maxPlayer) {
         OthelloGame othelloGame = new OthelloGame();
-        return othelloGame.noSpace(tab)
-                || (othelloGame.getValidMoves(tab, getMyBoardMark()).size() == 0
-                && othelloGame.getValidMoves(tab, getOpponentBoardMark()).size() == 0);
+        if (maxPlayer) {
+            return othelloGame.noSpace(tab)
+                    || othelloGame.getValidMoves(tab, getMyBoardMark()).size() == 0;
+        } else {
+            return othelloGame.noSpace(tab)
+                    || othelloGame.getValidMoves(tab, getOpponentBoardMark()).size() == 0;
+        }
     }
+
 /**************** END SEARCH *****************/
+
 /**************** EVALUATION *****************/
 
-    private double eval(int[][] node) {
+    private double eval(int[][] node, boolean end) {
         double diff = pieceDiff(node);
         double cor_occ = cornerOccupancy(node);
         double cor_close = cornerCloseness(node);
@@ -138,7 +243,12 @@ public class ParsianPlayer extends AbstractPlayer {
         double frontier = frontierDices(node);
         double disc = disc_squares(node);
 
-        double evaluate = 10 * diff + 801.724 * cor_occ + 382.026 * cor_close + 78.922 * mob + 74.396 * frontier + 10 * disc;
+        double evaluate = 10 * diff
+                + 801.724 * cor_occ
+                + 382.026 * cor_close
+                + 78.922 * mob
+                + 74.396 * frontier
+                + 10 * disc;
 
         return evaluate;
     }
@@ -151,7 +261,7 @@ public class ParsianPlayer extends AbstractPlayer {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (node[i][j] == getMyBoardMark()) B_piece++;
-                else if (node[i][j] == getBoardMark()) R_piece++;
+                else if (node[i][j] == getOpponentBoardMark()) R_piece++;
             }
         }
 
@@ -171,25 +281,25 @@ public class ParsianPlayer extends AbstractPlayer {
 
         if (node[0][0] == getMyBoardMark()) {
             B_cor++;
-        } else if (node[0][0] == getBoardMark()) {
+        } else if (node[0][0] == getOpponentBoardMark()) {
             R_cor++;
         }
 
         if (node[0][7] == getMyBoardMark()) {
             B_cor++;
-        } else if (node[0][7] == getBoardMark()) {
+        } else if (node[0][7] == getOpponentBoardMark()) {
             R_cor++;
         }
 
         if (node[7][0] == getMyBoardMark()) {
             B_cor++;
-        } else if (node[7][0] == getBoardMark()) {
+        } else if (node[7][0] == getOpponentBoardMark()) {
             R_cor++;
         }
 
         if (node[7][7] == getMyBoardMark()) {
             B_cor++;
-        } else if (node[7][7] == getBoardMark()) {
+        } else if (node[7][7] == getOpponentBoardMark()) {
             R_cor++;
         }
 
@@ -203,19 +313,19 @@ public class ParsianPlayer extends AbstractPlayer {
         if (node[0][0] == 0) {
             if (node[0][1] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[0][1] == getBoardMark()) {
+            } else if (node[0][1] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[1][0] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[1][0] == getBoardMark()) {
+            } else if (node[1][0] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[1][1] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[1][1] == getBoardMark()) {
+            } else if (node[1][1] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
         }
@@ -224,19 +334,19 @@ public class ParsianPlayer extends AbstractPlayer {
         if (node[0][7] == 0) {
             if (node[0][6] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[0][6] == getBoardMark()) {
+            } else if (node[0][6] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[1][7] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[1][7] == getBoardMark()) {
+            } else if (node[1][7] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[1][6] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[1][6] == getBoardMark()) {
+            } else if (node[1][6] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
         }
@@ -245,19 +355,19 @@ public class ParsianPlayer extends AbstractPlayer {
         if (node[7][0] == 0) {
             if (node[6][0] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[6][0] == getBoardMark()) {
+            } else if (node[6][0] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[7][1] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[7][1] == getBoardMark()) {
+            } else if (node[7][1] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[6][1] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[6][1] == getBoardMark()) {
+            } else if (node[6][1] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
         }
@@ -266,19 +376,19 @@ public class ParsianPlayer extends AbstractPlayer {
         if (node[7][7] == 0) {
             if (node[6][7] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[6][7] == getBoardMark()) {
+            } else if (node[6][7] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[6][6] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[6][6] == getBoardMark()) {
+            } else if (node[6][6] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
 
             if (node[7][6] == getMyBoardMark()) {
                 B_cor_close++;
-            } else if (node[7][6] == getBoardMark()) {
+            } else if (node[7][6] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
         }
@@ -289,8 +399,8 @@ public class ParsianPlayer extends AbstractPlayer {
 
     private double mobility(int[][] node) {
         OthelloGame g = new OthelloGame();
-        int B_moves = g.getValidMoves(node, 1).size();
-        int R_moves = g.getValidMoves(node, 2).size();
+        int B_moves = g.getValidMoves(node, getMyBoardMark()).size();
+        int R_moves = g.getValidMoves(node, getOpponentBoardMark()).size();
 
         double mob;
 
@@ -349,10 +459,16 @@ public class ParsianPlayer extends AbstractPlayer {
     }
 
     private double disc_squares(int[][] node) {
-        int[][] v = {{20, -3, 11, 8, 8, 11, -3, 20},
-                {-3, -7, -4, 1, 1, -4, -7, -3},
-                {11, -4, 2, 2, 2, 2, -4, 11},
-                {8, 1, 2, -3, -3, 2, 1, 8}};
+        int[][] v = {
+                {20, -3, 11,  8,  8, 11, -3, 20},
+                {-3, -7, -4,  1,  1, -4, -7, -3},
+                {11, -4,  2,  2,  2,  2, -4, 11},
+                { 8,  1,  2, -3, -3,  2,  1,  8},
+                { 8,  1,  2, -3, -3,  2,  1,  8},
+                {11, -4,  2,  2,  2,  2, -4, 11},
+                {-3, -7, -4,  1,  1, -4, -7, -3},
+                {20, -3, 11,  8,  8, 11, -3, 20}
+        };
 
 
         double res = 0;
@@ -361,7 +477,7 @@ public class ParsianPlayer extends AbstractPlayer {
             for (int j = 0; j < 8; j++) {
                 if (node[i][j] == getMyBoardMark()) {
                     res += v[i][j];
-                } else if (node[i][j] == getMyBoardMark()) {
+                } else if (node[i][j] == getOpponentBoardMark()) {
                     res -= v[i][j];
                 }
             }
@@ -369,6 +485,40 @@ public class ParsianPlayer extends AbstractPlayer {
 
         return res;
 
+    }
+
+
+
+    /**************** END EVALUATION *****************/
+
+}
+
+
+class Entity {
+    Entity(int[][] _node){
+        key = _node;
+    }
+    Entity(int[][] _node, Move _move){
+        key = _node;
+        move = _move;
+    }
+    private int[][] key;
+    private Move move;
+
+    public void setMove(Move move) {
+        this.move = move;
+    }
+
+    public Move getMove() {
+        return move;
+    }
+
+    public void setKey(int[][] key) {
+        this.key = key;
+    }
+
+    public int[][] getKey() {
+        return key;
     }
 
     private int zobristHash(int[][] node) {
@@ -394,19 +544,8 @@ public class ParsianPlayer extends AbstractPlayer {
         return result;
     }
 
-    /**************** END EVALUATION *****************/
-
-}
-
-
-class Entity {
-    Entity(int[][] _node){
-        key = _node;
-    }
-    private int[][] key;
-
     @Override
     public int hashCode() { // TODO : Change it to zorbist
-        return super.hashCode();
+        return zobristHash(key);
     }
 }
