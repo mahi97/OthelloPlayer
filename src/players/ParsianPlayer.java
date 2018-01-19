@@ -48,9 +48,8 @@ public class ParsianPlayer extends AbstractPlayer {
         System.out.println("Branch: " + jogo.getValidMoves(tab, getMyBoardMark()).size());
         System.out.println("Branch: " + jogo.getValidMoves(tab, getOpponentBoardMark()).size());
 
-        if (getMyBoardMark() == 1 || true) f = alphaBeta(new Entity(tab), 0, 1, getDepth(), false);
-//        else
-//            f = BNS(new Entity(tab), -Double.MAX_VALUE + 1, Double.MAX_VALUE);
+        if (getMyBoardMark() == 1) f = alphaBeta(new Entity(tab), 0, 1, getDepth(), false);
+        else f = MTDF(new Entity(tab), 5000, getDepth());
         System.out.println("Point : " + f);
         if (best == null) {
             System.out.println("MISSED" + jogo.getValidMoves(tab, getMyBoardMark()) + "  " + getMyBoardMark());
@@ -77,6 +76,7 @@ public class ParsianPlayer extends AbstractPlayer {
     }
 
     /**************** SEARCH *****************/
+
     public double BNS(Entity node, double alpha, double beta) {
         OthelloGame othelloGame = new OthelloGame();
         List<Move> moveList = othelloGame.getValidMoves(node.getKey(), getMyBoardMark());
@@ -107,6 +107,38 @@ public class ParsianPlayer extends AbstractPlayer {
         } while (!((beta - alpha < 2) || betterCounter == 1));
         assert bestNode != null;
         return bestVal;
+    }
+
+    public  double PVS(Entity root, double alpha, double beta, int depth) {
+        if (depth == 0) {
+            return eval(root.getKey(), false);
+        }
+        OthelloGame othelloGame = new OthelloGame();
+
+        double score = 0.0;
+        boolean bSearchPV = true;
+
+        for (Move m : othelloGame.getValidMoves(root.getKey(), getMyBoardMark())) {
+            Entity e = new Entity(m.getBoard());
+            e.setMove(m);
+            if (bSearchPV) {
+                score = -PVS(e, -beta, -alpha, depth - 1);
+            } else {
+                score = -PVS(e, -alpha - 1, -alpha, depth - 1);
+                if (score > alpha)
+                    score = -PVS(e, -beta, -alpha, depth - 1);  /// research
+            }
+
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha) {
+                alpha = score;
+                bSearchPV = false;
+            }
+        }
+
+        return alpha;
     }
 
     public double MTDF(Entity root, double firstGuess, int depth) {
@@ -144,7 +176,21 @@ public class ParsianPlayer extends AbstractPlayer {
                 return d;
             } else {
                 double e = eval(root.getKey(), false);
-                transportTable.put(root, e);
+                addRotationsToTable(root, e);
+
+                int[][] tmp = new int[8][8];
+                for (int i = 0; i < tmp.length; i++) {
+                    for (int j = 0; j < tmp[0].length; j++) {
+                        tmp[i][j] = root.getKey()[i][j];
+                    }
+                }
+                rotateByNinetyToLeft(tmp);
+                Entity ent90 = new Entity(tmp);
+
+                if (transportTable.containsKey(ent90)) {
+                    System.out.println("90 added");
+                }
+                    //                transportTable.put(root, e);
                 return e;
             }
         }
@@ -504,9 +550,9 @@ public class ParsianPlayer extends AbstractPlayer {
     private void addRotationsToTable(Entity ent, double eval) {
         Entity ent90, ent180, ent270;
 
-        int [][] tmp1 = new int [8][8];
-        int [][] tmp2 = new int [8][8];
-        int [][] tmp3 = new int [8][8];
+        int[][] tmp1 = new int[8][8];
+        int[][] tmp2 = new int[8][8];
+        int[][] tmp3 = new int[8][8];
         for (int i = 0; i < tmp1.length; i++) {
             for (int j = 0; j < tmp1[0].length; j++) {
                 tmp1[i][j] = ent.getKey()[i][j];
@@ -562,13 +608,25 @@ public class ParsianPlayer extends AbstractPlayer {
 
 
 class Entity {
-    Entity(int[][] _node){
-        key = _node;
+    Entity(int[][] _node) {
+        key = new int[8][8];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                key[i][j]=_node[i][j];
+            }
+        }
     }
-    Entity(int[][] _node, Move _move){
-        key = _node;
+
+    Entity(int[][] _node, Move _move) {
+        key = new int[8][8];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                key[i][j]=_node[i][j];
+            }
+        }
         move = _move;
     }
+
     private int[][] key;
     private Move move;
 
@@ -589,13 +647,11 @@ class Entity {
     }
 
     private int zobristHash(int[][] node) {
-        BigInteger big, res;
-
         Vector<Integer> val = new Vector<>();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (node[i][j] != 0) {
-                    val.add(node[i][j] * (8 * i + j + 1));
+                    val.add((node[i][j]+2) * (8 * i + j + 1));
                 }
             }
         }
@@ -613,13 +669,13 @@ class Entity {
 
     @Override
     public boolean equals(Object obj) {
-        Entity ent = (Entity)obj;
+        Entity ent = (Entity) obj;
         boolean equal = true;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if(this.key[i][j] != ent.key[i][i]) {
+                if (this.key[i][j] != ent.key[i][j]) {
                     equal = false;
-                    break;
+                    return equal;
                 }
             }
         }
