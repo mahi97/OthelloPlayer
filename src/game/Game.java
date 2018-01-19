@@ -3,10 +3,7 @@ package game;
 import display.Display;
 
 import javax.swing.*;
-import java.math.BigInteger;
 import java.util.List;
-import java.util.Random;
-import java.util.Vector;
 
 /**
  *
@@ -41,16 +38,18 @@ public class Game {
             case 0:
                 game = new OthelloGame();
                 //Define player 1 class
-                player = new players.RandomPlayer(2);
+                player = new players.ParsianPlayer(8);
                 player.setBoardMark(X);
                 player.setOpponentBoardMark(O);
                 player.setGame(game);
+
                 //Define player 2 class
-                if (displayOtello != null) {
-                    player2 = new players.HumanPlayerDisplay(2);
-                } else {
-                    player2 = new players.HumanPlayer(2);
-                }
+                player2 = new players.ParsianPlayer(8);
+//                if (displayOtello != null) {
+//                    player2 = new players.HumanPlayerDisplay(2);
+//                } else {
+//                    player2 = new players.HumanPlayer(2);
+//                }
                 player2.setBoardMark(O);
                 player2.setOpponentBoardMark(X);
                 player2.setGame(game);
