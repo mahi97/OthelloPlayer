@@ -48,13 +48,13 @@ public class ParsianPlayer extends AbstractPlayer {
         System.out.println("Branch: " + jogo.getValidMoves(tab, getMyBoardMark()).size());
         System.out.println("Branch: " + jogo.getValidMoves(tab, getOpponentBoardMark()).size());
 
-        if (getMyBoardMark() == 1 || true) f = alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
+        if (getMyBoardMark() == 1 || true) f = alphaBeta(new Entity(tab), 0, 1, getDepth(), false);
 //        else
 //            f = BNS(new Entity(tab), -Double.MAX_VALUE + 1, Double.MAX_VALUE);
         System.out.println("Point : " + f);
         if (best == null) {
             System.out.println("MISSED" + jogo.getValidMoves(tab, getMyBoardMark()) + "  " + getMyBoardMark());
-            return new BoardSquare(-1,-1);
+            return new BoardSquare(-1, -1);
         }
         System.out.println(best.getBardPlace().toString());
         return best.getBardPlace();
@@ -76,7 +76,7 @@ public class ParsianPlayer extends AbstractPlayer {
 
     }
 
-/**************** SEARCH *****************/
+    /**************** SEARCH *****************/
     public double BNS(Entity node, double alpha, double beta) {
         OthelloGame othelloGame = new OthelloGame();
         List<Move> moveList = othelloGame.getValidMoves(node.getKey(), getMyBoardMark());
@@ -86,7 +86,7 @@ public class ParsianPlayer extends AbstractPlayer {
         do {
             double test = 0.0; // next Guess
             betterCounter = 0;
-            for(Move m : moveList) {
+            for (Move m : moveList) {
 
                 bestVal = -alphaBetaWithMemory(node, -test, -test + 1, getDepth(), true);
                 if (bestVal >= test) {
@@ -126,7 +126,7 @@ public class ParsianPlayer extends AbstractPlayer {
         return goal;
     }
 
-    public double alphaBeta(Entity root, double alpha, double beta, int depth, boolean withMemory){
+    public double alphaBeta(Entity root, double alpha, double beta, int depth, boolean withMemory) {
         if (withMemory) {
             return alphaBetaWithMemory(root, -Double.MAX_VALUE + 1, Double.MAX_VALUE, depth, true);
         } else {
@@ -241,26 +241,10 @@ public class ParsianPlayer extends AbstractPlayer {
 
 /**************** END SEARCH *****************/
 
-/**************** EVALUATION *****************/
+    /**************** EVALUATION *****************/
 
     private double eval(int[][] node, boolean end) {
         double diff = pieceDiff(node);
-
-        if(end)
-            return diff;
-
-        switch (gameStage) {
-            case OPENING:
-                break;
-            case EARLY:
-                break;
-            case MID:
-                break;
-            case PRE_END:
-                break;
-            default:
-
-        }
         double cor_occ = cornerOccupancy(node);
         double cor_close = cornerCloseness(node);
         double mob = mobility(node);
@@ -484,14 +468,14 @@ public class ParsianPlayer extends AbstractPlayer {
 
     private double disc_squares(int[][] node) {
         int[][] v = {
-                {20, -3, 11,  8,  8, 11, -3, 20},
-                {-3, -7, -4,  1,  1, -4, -7, -3},
-                {11, -4,  2,  2,  2,  2, -4, 11},
-                { 8,  1,  2, -3, -3,  2,  1,  8},
-                { 8,  1,  2, -3, -3,  2,  1,  8},
-                {11, -4,  2,  2,  2,  2, -4, 11},
-                {-3, -7, -4,  1,  1, -4, -7, -3},
-                {20, -3, 11,  8,  8, 11, -3, 20}
+                {20, -3, 11, 8, 8, 11, -3, 20},
+                {-3, -7, -4, 1, 1, -4, -7, -3},
+                {11, -4, 2, 2, 2, 2, -4, 11},
+                {8, 1, 2, -3, -3, 2, 1, 8},
+                {8, 1, 2, -3, -3, 2, 1, 8},
+                {11, -4, 2, 2, 2, 2, -4, 11},
+                {-3, -7, -4, 1, 1, -4, -7, -3},
+                {20, -3, 11, 8, 8, 11, -3, 20}
         };
 
 
@@ -511,13 +495,69 @@ public class ParsianPlayer extends AbstractPlayer {
 
     }
 
-    private double stability(int node[][]){
+    private double stability(int node[][]) {
         return 0;
     }
 
-
     /**************** END EVALUATION *****************/
 
+    private void addRotationsToTable(Entity ent, double eval) {
+        Entity ent90, ent180, ent270;
+
+        int [][] tmp1 = new int [8][8];
+        int [][] tmp2 = new int [8][8];
+        int [][] tmp3 = new int [8][8];
+        for (int i = 0; i < tmp1.length; i++) {
+            for (int j = 0; j < tmp1[0].length; j++) {
+                tmp1[i][j] = ent.getKey()[i][j];
+                tmp2[i][j] = ent.getKey()[i][j];
+                tmp3[i][j] = ent.getKey()[i][j];
+            }
+        }
+
+        rotateByNinetyToLeft(tmp1);
+        ent90 = new Entity(tmp1);
+
+        rotateByNinetyToLeft(tmp2);
+        rotateByNinetyToLeft(tmp2);
+        ent180 = new Entity(tmp1);
+
+        rotateByNinetyToRight(tmp3);
+        ent270 = new Entity(tmp1);
+
+        transportTable.put(ent, eval);
+        transportTable.put(ent90, eval);
+        transportTable.put(ent180, eval);
+        transportTable.put(ent270, eval);
+    }
+
+    private static void transpose(int[][] m) {
+        for (int i = 0; i < m.length; i++) {
+            for (int j = 0; j < m[0].length; j++) {
+                int x = m[i][j];
+                m[i][j] = m[j][i];
+                m[j][i] = x;
+            }
+        }
+    }
+
+    private static void swapRows(int[][] m) {
+        for (int i = 0, k = m.length - 1; i < k; ++i, --k) {
+            int[] x = m[i];
+            m[i] = m[k];
+            m[k] = x;
+        }
+    }
+
+    private static void rotateByNinetyToLeft(int[][] m) {
+        transpose(m);
+        swapRows(m);
+    }
+
+    private static void rotateByNinetyToRight(int[][] m) {
+        swapRows(m);
+        transpose(m);
+    }
 }
 
 
@@ -569,6 +609,22 @@ class Entity {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Entity ent = (Entity)obj;
+        boolean equal = true;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if(this.key[i][j] != ent.key[i][i]) {
+                    equal = false;
+                    break;
+                }
+            }
+        }
+
+        return equal;
     }
 
     @Override
