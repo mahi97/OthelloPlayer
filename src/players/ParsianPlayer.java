@@ -77,6 +77,16 @@ public class ParsianPlayer extends AbstractPlayer {
                 }
             }
         }
+        if (both) {
+            for (Move m : othelloGame.getValidMoves(tab, getOpponentBoardMark())) {
+                if (m.getBardPlace().getCol() == 0 || m.getBardPlace().getCol() == 7) {
+                    if (m.getBardPlace().getRow() == 0 || m.getBardPlace().getRow() == 7) {
+                        killerMove = m;
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
@@ -92,6 +102,10 @@ public class ParsianPlayer extends AbstractPlayer {
         } else {
             gameStage = GameStage.END;
         }
+
+    }
+
+    private void addToTable(Entity node, double eval) {
 
     }
 
@@ -163,6 +177,7 @@ public class ParsianPlayer extends AbstractPlayer {
                 return d;
             } else {
                 double e = eval(root.getKey(), false);
+
                 transportTable.put(root, e);
                 return e;
             }
