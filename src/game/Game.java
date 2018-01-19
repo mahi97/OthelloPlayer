@@ -22,6 +22,7 @@ public class Game {
     }
 
     public static void main(String[] args) throws Exception {
+
         BoardSquare boardPlace = null;
         AbstractGame game = null;
         AbstractPlayer player = null;
@@ -39,7 +40,7 @@ public class Game {
                 game = new OthelloGame();
                 //Define player 1 class
 
-                player = new players.ParsianPlayer(4);
+                player = new players.ParsianPlayer(6);
 //                if (displayOtello != null) {
 //                    player = new players.HumanPlayerDisplay(2);
 //                } else {
@@ -51,7 +52,7 @@ public class Game {
 
                 //Define player 2 class
 
-                player2 = new players.ParsianPlayer(4);
+                player2 = new players.ParsianPlayer(6);
 //                if (displayOtello != null) {
 //                    player2 = new players.HumanPlayerDisplay(2);
 //                } else {
