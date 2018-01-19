@@ -26,6 +26,7 @@ public class ParsianPlayer extends AbstractPlayer {
 
     private int playCounter;
     private Move best;
+    private Move killerMove;
 
     public ParsianPlayer(int depth) {
         super(depth);
@@ -44,6 +45,9 @@ public class ParsianPlayer extends AbstractPlayer {
         System.out.println("Game Stage : " + gameStage.name());
         best = null;
         double f;
+
+        if (killerCondition(false, tab)) return killerMove.getBardPlace();
+
         System.out.println("Branch: " + jogo.getValidMoves(tab, getMyBoardMark()).size());
         System.out.println("Branch: " + jogo.getValidMoves(tab, getOpponentBoardMark()).size());
 
@@ -60,7 +64,21 @@ public class ParsianPlayer extends AbstractPlayer {
 
     }
 
-    public void evalGameState() {
+    private boolean killerCondition(boolean both, int[][] tab) {
+        OthelloGame othelloGame = new OthelloGame();
+        // Corner Killer
+        for (Move m : othelloGame.getValidMoves(tab, getMyBoardMark())) {
+            if (m.getBardPlace().getCol() == 0 || m.getBardPlace().getCol() == 7) {
+                if (m.getBardPlace().getRow() == 0 || m.getBardPlace().getRow() == 7) {
+                    killerMove = m;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void evalGameState() {
         if (playCounter < 5) {
             gameStage = GameStage.OPENING;
         } else if (playCounter < 10) {
