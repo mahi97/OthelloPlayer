@@ -47,7 +47,7 @@ public class Game {
                 //Define player 2 class
 
                 player2 = new players.ParsianPlayer(4);
-""//                if (displayOtello != null) {
+//                if (displayOtello != null) {
 //                    player2 = new players.HumanPlayerDisplay(2);
 //                } else {
 //                    player2 = new players.HumanPlayer(2);

@@ -4,6 +4,7 @@ import game.AbstractPlayer;
 import game.BoardSquare;
 import game.Move;
 import game.OthelloGame;
+import javafx.scene.input.KeyCode;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -244,6 +245,22 @@ public class ParsianPlayer extends AbstractPlayer {
 
     private double eval(int[][] node, boolean end) {
         double diff = pieceDiff(node);
+
+        if(end)
+            return diff;
+
+        switch (gameStage) {
+            case OPENING:
+                break;
+            case EARLY:
+                break;
+            case MID:
+                break;
+            case PRE_END:
+                break;
+            default:
+
+        }
         double cor_occ = cornerOccupancy(node);
         double cor_close = cornerCloseness(node);
         double mob = mobility(node);
@@ -494,6 +511,9 @@ public class ParsianPlayer extends AbstractPlayer {
 
     }
 
+    private double stability(int node[][]){
+        return 0;
+    }
 
 
     /**************** END EVALUATION *****************/
