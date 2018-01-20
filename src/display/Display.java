@@ -46,7 +46,7 @@ public class Display extends JFrame {
     private JFrame frame;
     private JPanel panel;
 
-    public static boolean ENABLE = true;
+    public static boolean ENABLE = false;
     public static int TIME = 500;
     public static Icon blue, red, blue_red, red_blue, blue_winner, red_winner, blue_player, red_player;
 

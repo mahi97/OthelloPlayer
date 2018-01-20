@@ -40,7 +40,7 @@ public class Game {
                 game = new OthelloGame();
                 //Define player 1 class
 
-                player = new players.ParsianPlayer(6);
+                player = new players.ParsianPlayer(4);
 //                if (displayOtello != null) {
 //                    player = new players.HumanPlayerDisplay(2);
 //                } else {
@@ -52,7 +52,7 @@ public class Game {
 
                 //Define player 2 class
 
-                player2 = new players.ParsianPlayer(6);
+                player2 = new players.ParsianPlayer(4);
 //                if (displayOtello != null) {
 //                    player2 = new players.HumanPlayerDisplay(2);
 //                } else {
@@ -82,7 +82,7 @@ public class Game {
             case 2:
                 game = new OthelloGame();
                 //Define player 1 class
-                player = (AbstractPlayer) Class.forName(args[0]).getConstructor(int.class).newInstance(2);
+                player = (AbstractPlayer) Class.forName(args[0]).getConstructor(int.class).newInstance(0);
                 player.setBoardMark(X);
                 player.setOpponentBoardMark(O);
                 player.setGame(game);
@@ -116,13 +116,13 @@ public class Game {
             }
             moveList = game.getValidMoves(othelloBoard.getBoard(), player.getMyBoardMark());
             if (moveList.size() > 0) {
-                try {
+//                try {
                     boardPlace = player.play(othelloBoard.getBoard());
                     validate = game.validate_moviment(othelloBoard.getBoard(), boardPlace, player);
-                } catch (Exception e) {
-                    validate = -2;
-                    winner = player2.getClass().toString();
-                }
+//                } catch (Exception e) {
+//                    validate = -2;
+//                    winner = player2.getClass().toString();
+//                }
             } else {
                 boardPlace = new BoardSquare(-1, -1);
                 validate = game.validate_moviment(othelloBoard.getBoard(), boardPlace, player);
@@ -169,13 +169,13 @@ public class Game {
             }
             moveList = game.getValidMoves(othelloBoard.getBoard(), player2.getMyBoardMark());
             if (moveList.size() > 0) {
-                try {
+//                try {
                     boardPlace = player2.play(othelloBoard.getBoard());
                     validate = game.validate_moviment(othelloBoard.getBoard(), boardPlace, player2);
-                } catch (Exception e) {
-                    validate = -2;
-                    winner = player.getClass().toString();
-                }
+//                } catch (Exception e) {
+//                    validate = -2;
+//                    winner = player.getClass().toString();
+//                }
             } else {
                 boardPlace = new BoardSquare(-1, -1);
                 validate = game.validate_moviment(othelloBoard.getBoard(), boardPlace, player2);
@@ -213,7 +213,8 @@ public class Game {
             }
 
         }
-        displayOtello.validateRepaint();
+        if (Display.ENABLE)
+            displayOtello.validateRepaint();
 
     }
 
