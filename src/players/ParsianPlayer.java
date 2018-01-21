@@ -202,7 +202,7 @@ public class ParsianPlayer extends AbstractPlayer {
         if (getMyBoardMark() == 1) {
             for (int i = 1; i < getDepth(); i++){
                 myDepth = i;
-                alphaBeta(new Entity(tab), 0, 1,i, false);
+                alphaBeta(new Entity(tab), 0, 1,i, true);
             }
         }
         else {
@@ -370,14 +370,18 @@ public class ParsianPlayer extends AbstractPlayer {
         OthelloGame othelloGame = new OthelloGame();
         Lock v = lookup(root);
         if (v.node != null) {
-            if (v.depth == 0 && depth == 0) {
-                return v.value;
-            }
-            if (v.depth >= depth) {
-                if (v.alpha > alpha) alpha = v.value;
-                if (v.beta < beta) beta = v.beta;
+            if (v.iter + v.depth >= depth + myDepth) {
+                if (v.depth == 0 && depth == 0) {
+                    return v.value;
+                }
+                if (v.depth + v.iter >= depth + myDepth) {
+                    if (v.alpha > alpha) alpha = v.value;
+                    if (v.beta < beta) beta = v.beta;
 //                return v.value;
+                }
             }
+        } else {
+            v.iter = myDepth;
         }
 
         int cw = checkWin(root);
@@ -388,12 +392,22 @@ public class ParsianPlayer extends AbstractPlayer {
             v.beta = beta;
             v.value = cw*(Double.MAX_VALUE - 1);
             v.depth = 0;
+            v.iter = myDepth;
             store(v);
             return v.value;
         }
+
         List<Move> moves;
         if (maxPlayer) moves = othelloGame.getValidMoves(root.getKey(), getMyBoardMark());
         else moves = othelloGame.getValidMoves(root.getKey(), getOpponentBoardMark());
+
+        boolean iter = false;
+        if (v.iter != myDepth) {
+            if (moves.contains(v.move)) {
+                moves.remove(v.move);
+                iter = true;
+            }
+        }
 
         if (depth == 0) {
             v.node = root;
@@ -401,7 +415,8 @@ public class ParsianPlayer extends AbstractPlayer {
             v.alpha = alpha;
             v.beta = beta;
             v.value = eval(root.getKey(), moves.size(), maxPlayer,false);
-            v.depth = depth;
+            v.depth = 0;
+            v.iter = myDepth;
             store(v);
             return v.value;
         }
@@ -412,6 +427,7 @@ public class ParsianPlayer extends AbstractPlayer {
             v.beta = beta;
             v.node = root;
             v.depth = 0;
+            v.iter = myDepth;
             v.move = null;
             return v.value;
         }
@@ -423,6 +439,7 @@ public class ParsianPlayer extends AbstractPlayer {
             v.beta = beta;
             v.move = moves.get(0);
             best = v.move;
+            v.iter = myDepth;
 //            store(v);
             return 0.0;
         }
@@ -430,6 +447,22 @@ public class ParsianPlayer extends AbstractPlayer {
         v.node = root;
         if (maxPlayer) {
             v.value = -Double.MAX_VALUE + 1;
+            if (iter) {
+                alpha = Math.max(alpha, alphaBetaWithMemory(new Entity(v.move.getBoard()), alpha, beta, depth - 1, false));
+                if (alpha > v.value) {
+                    v.value = alpha;
+                    v.depth = depth;
+                    v.alpha = alpha;
+                    v.beta  = beta;
+                    v.iter = myDepth;
+                    if (depth == myDepth)
+                        best = v.move;
+                }
+                if (beta <= alpha) {
+                    store(v);
+                    return v.value;
+                }
+            }
             for (final Move m : moves) {
                 v.move = m;
                 alpha = Math.max(alpha, alphaBetaWithMemory(new Entity(m.getBoard()), alpha, beta, depth - 1, false));
@@ -438,6 +471,7 @@ public class ParsianPlayer extends AbstractPlayer {
                     v.depth = depth;
                     v.alpha = alpha;
                     v.beta  = beta;
+                    v.iter  = myDepth;
                     if (depth == myDepth)
                         best = m;
                 }
@@ -447,6 +481,21 @@ public class ParsianPlayer extends AbstractPlayer {
             }
         } else {
             v.value = Double.MAX_VALUE;
+            if (iter) {
+                beta = Math.min(beta, alphaBetaWithMemory(new Entity(v.move.getBoard()), alpha, beta, depth - 1, true));
+                if (beta < v.value) {
+                    v.value = beta;
+                    v.depth = depth;
+                    v.alpha = alpha;
+                    v.beta  = beta;
+                    v.iter = myDepth;
+                }
+                if (beta <= alpha) {
+                    store(v);
+                    return v.value;
+                }
+            }
+
             for (final Move m : moves) {
                 v.move = m;
                 beta = Math.min(beta, alphaBetaWithMemory(new Entity(m.getBoard()), alpha, beta, depth - 1, true));
@@ -455,6 +504,7 @@ public class ParsianPlayer extends AbstractPlayer {
                     v.depth = depth;
                     v.alpha = alpha;
                     v.beta  = beta;
+                    v.iter = myDepth;
                 }
                 if (beta <= alpha) {
                     break;
@@ -1014,10 +1064,15 @@ class Lock{
     }
 
     public Lock(Entity _node, double val, Move _move, int _mode){
-        this(_node, val);
-        move = _move;
+        this(_node, val, _move);
         depth = _mode;
     }
+
+    public Lock(Entity _node, double val, Move _move, int _mode, int _iter){
+        this(_node, val, _move, _mode);
+        iter = _iter;
+    }
+
 
     public Lock(){
         this(null,0.0,null, -1);
@@ -1029,6 +1084,7 @@ class Lock{
     public int depth;
     public double alpha;
     public double beta;
+    public int iter;
 
 }
 
