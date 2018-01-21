@@ -433,12 +433,16 @@ public class ParsianPlayer extends AbstractPlayer {
         else moves = othelloGame.getValidMoves(root.getKey(), getOpponentBoardMark());
 
         boolean iter = false;
-        if (v.iter != myDepth) {
-            if (moves.contains(v.move)) {
-                moves.remove(v.move);
-                iter = true;
-            }
-        }
+//        if (v.iter != myDepth) {
+//            if (moves.contains(v.move)) {
+//                moves.remove(v.move);
+//                iter = true;
+//            }
+//        } else if (killerCondition(moves) && getMyBoardMark() == 1){
+//            moves.remove(killerMove);
+//            v.move = killerMove;
+//            iter = true;
+//        }
 
         if (depth == 0) {
             v.node = root;
