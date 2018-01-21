@@ -230,15 +230,20 @@ public class ParsianPlayer extends AbstractPlayer {
 
 //        if (killerCondition(false, tab) && getMyBoardMark() == 1) return killerMove.getBardPlace();
 
-        if (getMyBoardMark() == 1) {
-            for (int i = 1; i < getDepth(); i++){
-                myDepth = i;
-                alphaBeta(new Entity(tab), 0, 1,i, true);
-            }
-        }
-        else {
-            alphaBeta(new Entity(tab), 0, 1,getDepth(), false);
-        }
+//        if (getMyBoardMark() == 1) {
+//            for (int i = 1; i < 10; i++){
+                myDepth = 8;
+                alphaBeta(new Entity(tab), 0, 1,8, false);
+//            }
+//        }
+//        else {
+//            for (int i = 1; i < getDepth(); i++){
+//                myDepth = i;
+//                alphaBeta(new Entity(tab), 0, 1,getDepth(), true);
+//            }
+//        }
+
+        System.out.println("Finished: " + myDepth);
 
         if (best == null) {
             System.out.println("MISSED" + jogo.getValidMoves(tab, getMyBoardMark()) + "  " + getMyBoardMark());
@@ -433,16 +438,16 @@ public class ParsianPlayer extends AbstractPlayer {
         else moves = othelloGame.getValidMoves(root.getKey(), getOpponentBoardMark());
 
         boolean iter = false;
-//        if (v.iter != myDepth) {
-//            if (moves.contains(v.move)) {
-//                moves.remove(v.move);
-//                iter = true;
-//            }
-//        } else if (killerCondition(moves) && getMyBoardMark() == 1){
-//            moves.remove(killerMove);
-//            v.move = killerMove;
-//            iter = true;
-//        }
+        if (v.iter != myDepth) {
+            if (moves.contains(v.move)) {
+                moves.remove(v.move);
+                iter = true;
+            }
+        } else if (killerCondition(moves) && getMyBoardMark() == 1){
+            moves.remove(killerMove);
+            v.move = killerMove;
+            iter = true;
+        }
 
         if (depth == 0) {
             v.node = root;
@@ -568,7 +573,7 @@ public class ParsianPlayer extends AbstractPlayer {
         }
 
         if (moves.isEmpty()) return eval(root.getKey(), moves.size(), maxPlayer,true);
-        if (moves.size() == 1 && depth == getDepth()) {
+        if (moves.size() == 1 && depth == myDepth) {
             best = moves.get(0);
             return 0.0;
         }
@@ -579,7 +584,7 @@ public class ParsianPlayer extends AbstractPlayer {
                 alpha = Math.max(alpha, alphaBetaCore(new Entity(m.getBoard()), alpha, beta, depth - 1, false));
                 if (alpha > v) {
                     v = alpha;
-                    if (depth == getDepth() || (isMPC && depth == MPCDepth)) best = m;
+                    if (depth == myDepth || (isMPC && depth == MPCDepth)) best = m;
                 }
                 if (beta <= alpha) {
                     break;
@@ -732,7 +737,7 @@ public class ParsianPlayer extends AbstractPlayer {
     private double eval(int[][] node, int moveSize, boolean maxPlayer, boolean end) {
 
         double diff = pieceDiff(node);
-        if (end) return diff*10
+        if (end || true) return diff*10
 //                + cor_occ * 801.724
 //                + cor_close * 382.026
         ;
@@ -750,6 +755,7 @@ public class ParsianPlayer extends AbstractPlayer {
         else if(gameStage == GameStage.PRE_END || gameStage == GameStage.END)
             index = 2;
 
+        index = 1;
         double evaluate = coeffs[index][0] * diff
                 + coeffs[index][1] * cor_occ
                 + coeffs[index][2] * cor_close
