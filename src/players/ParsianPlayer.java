@@ -22,7 +22,36 @@ enum GameStage {
     END
 }
 
+
 public class ParsianPlayer extends AbstractPlayer {
+
+    double[][] coeffs = new double[3][6];
+     private void fill_coeff(){
+
+         /// Early
+         coeffs[0][0] = 5;      //piece diff
+         coeffs[0][1] = 950.724; //corner occupancy
+         coeffs[0][2] = 500.026; //corner closeness
+         coeffs[0][3] = 78.922;  //mobility
+         coeffs[0][4] = 74.396;  //frontier discs
+         coeffs[0][5] = 15;      //disc squares
+
+         /// Middle
+         coeffs[1][0] = 10;
+         coeffs[1][1] = 801.724;
+         coeffs[1][2] = 382.026;
+         coeffs[1][3] = 78.922;
+         coeffs[1][4] = 74.396;
+         coeffs[1][5] = 10;
+
+         /// Pre-end
+         coeffs[2][0] = 50;
+         coeffs[2][1] = 501.724;
+         coeffs[2][2] = 132.026;
+         coeffs[2][3] = 78.922;
+         coeffs[2][4] = 74.396;
+         coeffs[2][5] = 5;
+     }
 
     int[][] zorbistNumber;
     Lock[][] hashTable;
@@ -53,6 +82,8 @@ public class ParsianPlayer extends AbstractPlayer {
         super(depth);
         myDepth = depth;
         learningParams = new LearningParams();
+
+        fill_coeff();
 
 //        initLearn(depth);
 
@@ -657,12 +688,21 @@ public class ParsianPlayer extends AbstractPlayer {
         double frontier = frontierDices(node);
         double disc = disc_squares(node);
 
-        double evaluate = 10 * diff
-                + 801.724 * cor_occ
-                + 382.026 * cor_close
-                + 200.922 * mob
-                + 74.396 * frontier
-                + 10 * disc;
+        int index = 1;
+        if(gameStage == GameStage.EARLY || gameStage == GameStage.OPENING)
+            index = 0;
+        else if(gameStage == GameStage.MID)
+            index = 1;
+        else if(gameStage == GameStage.PRE_END || gameStage == GameStage.END)
+            index = 2;
+
+        double evaluate = coeffs[index][0] * diff
+                + coeffs[index][1] * cor_occ
+                + coeffs[index][2] * cor_close
+                + coeffs[index][3] * mob
+                + coeffs[index][4] * frontier
+                + coeffs[index][5] * disc;
+
 //        double evaluate = learningParams.weights[0] * diff
 //                + learningParams.weights[1] * cor_occ
 //                + learningParams.weights[2] * cor_close
@@ -732,15 +772,15 @@ public class ParsianPlayer extends AbstractPlayer {
         //// up left
         if (node[0][0] == 0) {
             if (node[0][1] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[0][1] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
             }
 
             if (node[1][0] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[1][0] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
             }
 
             if (node[1][1] == getMyBoardMark()) {
@@ -753,15 +793,15 @@ public class ParsianPlayer extends AbstractPlayer {
         //// up right
         if (node[0][7] == 0) {
             if (node[0][6] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[0][6] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
             }
 
             if (node[1][7] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[1][7] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
             }
 
             if (node[1][6] == getMyBoardMark()) {
@@ -774,15 +814,15 @@ public class ParsianPlayer extends AbstractPlayer {
         //// down left
         if (node[7][0] == 0) {
             if (node[6][0] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[6][0] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
             }
 
             if (node[7][1] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[7][1] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
             }
 
             if (node[6][1] == getMyBoardMark()) {
@@ -795,20 +835,20 @@ public class ParsianPlayer extends AbstractPlayer {
         //// down right
         if (node[7][7] == 0) {
             if (node[6][7] == getMyBoardMark()) {
-                B_cor_close++;
+                B_cor_close+=2;
             } else if (node[6][7] == getOpponentBoardMark()) {
-                R_cor_close++;
+                R_cor_close+=2;
+            }
+
+            if (node[7][6] == getMyBoardMark()) {
+                B_cor_close+=2;
+            } else if (node[7][6] == getOpponentBoardMark()) {
+                R_cor_close+=2;
             }
 
             if (node[6][6] == getMyBoardMark()) {
                 B_cor_close++;
             } else if (node[6][6] == getOpponentBoardMark()) {
-                R_cor_close++;
-            }
-
-            if (node[7][6] == getMyBoardMark()) {
-                B_cor_close++;
-            } else if (node[7][6] == getOpponentBoardMark()) {
                 R_cor_close++;
             }
         }
