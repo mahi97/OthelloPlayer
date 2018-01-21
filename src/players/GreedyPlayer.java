@@ -22,6 +22,7 @@ public class GreedyPlayer extends AbstractPlayer {
             int[][] boardCopy = copy(board);
             getGame().do_move(boardCopy, move.getBardPlace(), this);
             if (countMyMarks(boardCopy) > bestMoveMarks) {
+                bestMoveMarks = countMyMarks(boardCopy);
                 bestMove = move.getBardPlace();
             }
         }

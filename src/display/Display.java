@@ -1,27 +1,17 @@
 package display;
 
+import game.AbstractPlayer;
+import game.BoardSquare;
+import game.Move;
 import players.HumanPlayerDisplay;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.io.File;
 import java.util.List;
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JPanel;
-import game.AbstractPlayer;
-import game.BoardSquare;
-import game.Move;
 
 /**
  *
@@ -46,7 +36,7 @@ public class Display extends JFrame {
     private JFrame frame;
     private JPanel panel;
 
-    public static boolean ENABLE = false;
+    public static boolean ENABLE = true;
     public static int TIME = 500;
     public static Icon blue, red, blue_red, red_blue, blue_winner, red_winner, blue_player, red_player;
 

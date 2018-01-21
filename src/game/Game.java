@@ -40,7 +40,7 @@ public class Game {
                 game = new OthelloGame();
                 //Define player 1 class
 
-                player = new players.ParsianPlayer(4);
+                player = new players.ParsianPlayer(7);
 //                if (displayOtello != null) {
 //                    player = new players.HumanPlayerDisplay(2);
 //                } else {
@@ -52,7 +52,7 @@ public class Game {
 
                 //Define player 2 class
 
-                player2 = new players.ParsianPlayer(4);
+                player2 = new players.ParsianPlayer(7);
 //                if (displayOtello != null) {
 //                    player2 = new players.HumanPlayerDisplay(2);
 //                } else {
@@ -82,7 +82,7 @@ public class Game {
             case 2:
                 game = new OthelloGame();
                 //Define player 1 class
-                player = (AbstractPlayer) Class.forName(args[0]).getConstructor(int.class).newInstance(0);
+                player = (AbstractPlayer) Class.forName(args[0]).getConstructor(int.class).newInstance(2);
                 player.setBoardMark(X);
                 player.setOpponentBoardMark(O);
                 player.setGame(game);
@@ -213,8 +213,7 @@ public class Game {
             }
 
         }
-        if (Display.ENABLE)
-            displayOtello.validateRepaint();
+         displayOtello.validateRepaint();
 
     }
 
