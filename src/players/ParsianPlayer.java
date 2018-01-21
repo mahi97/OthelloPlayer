@@ -234,10 +234,10 @@ public class ParsianPlayer extends AbstractPlayer {
 //        if (killerCondition(false, tab) && getMyBoardMark() == 1) return killerMove.getBardPlace();
 
 //        if (getMyBoardMark() == 1) {
-//            for (int i = 1; i < 10; i++){
-                myDepth = 8;
-                alphaBeta(new Entity(tab), 0, 1,8, false);
-//            }
+            for (int i = 1; i < 8; i++){
+                myDepth = i;
+                alphaBeta(new Entity(tab), 0, 1,i, false);
+            }
 //        }
 //        else {
 //            for (int i = 1; i < getDepth(); i++){
