@@ -5,10 +5,7 @@ import game.BoardSquare;
 import game.Move;
 import game.OthelloGame;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
@@ -1085,7 +1082,8 @@ public class ParsianPlayer extends AbstractPlayer {
 
     private void loadOpeningBook(){
         String line = null;
-        String fileName =  System.getProperty("user.dir")+"/OpeningBook.txt";
+        String separator = File.separator;
+        String fileName =  System.getProperty("user.dir")+separator+"src" + separator +"players" + separator+ "OpeningBook.txt";
 //        System.out.println(fileName);
         try {
             // FileReader reads text files in the default encoding.
