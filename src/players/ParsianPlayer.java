@@ -26,6 +26,8 @@ enum GameStage {
 public class ParsianPlayer extends AbstractPlayer {
 
     double[][] coeffs = new double[3][6];
+    int[][][] opening = new int[59][17][2];
+    int[] openingCount = new int[59];
      private void fill_coeff(){
 
          /// Early
@@ -84,6 +86,7 @@ public class ParsianPlayer extends AbstractPlayer {
         learningParams = new LearningParams();
 
         fill_coeff();
+        loadOpeningBook();
 
 //        initLearn(depth);
 
@@ -1073,6 +1076,58 @@ public class ParsianPlayer extends AbstractPlayer {
         swapRows(m);
         transpose(m);
     }
+
+    private void loadOpeningBook(){
+        String line = null;
+        String fileName =  System.getProperty("user.dir")+"/OpeningBook.txt";
+//        System.out.println(fileName);
+        try {
+            // FileReader reads text files in the default encoding.
+            FileReader fileReader = new FileReader(fileName);
+
+            // Always wrap FileReader in BufferedReader.
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            int lineCount = 0, index = 0;
+            while((line = bufferedReader.readLine()) != null) {
+                String[] l = line.split(" ");
+                index = 0;
+                for(String str : l){
+                    int ij = Integer.parseInt(str);
+                    opening[lineCount][index][0] = ij/10;
+                    opening[lineCount][index][1] = ij%10;
+                    index++;
+                }
+                openingCount[lineCount] = index;
+                lineCount++;
+            }
+
+            // Always close files.
+            bufferedReader.close();
+        }
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            fileName + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + fileName + "'");
+            // Or we could just do this:
+            // ex.printStackTrace();
+        }
+
+//        for (int i = 0; i <50 ; i++) {
+//            for (int j = 0; j <openingCount[i] ; j++) {
+//                System.out.print(opening[i][j][0]+" : "+opening[i][j][1]+"    ");
+//            }
+//            System.out.println();
+//        }
+    }
+
+
+
 }
 
 class LearningParams{
